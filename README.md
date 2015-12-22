@@ -3,6 +3,9 @@
 
 This is jQuery plug-in that it can switch the displayed element at regular intervals.
 
+## デモページ / Demo Page
+http://hommaam.github.io/mInterval
+
 ## 使用方法 / How to use
 jQuery本体の読み込み後、jquery.mInterval.jsを読み込みます。
 切り替えたい要素を`<li>`要素としてマークアップし、その親の`<ul>`要素を`mInterval`クラス属性にします。
