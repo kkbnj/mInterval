@@ -1,6 +1,6 @@
 /*!
- * jQuery method mInterval v1.2
- * Copyright 2015 maam.inc
+ * jQuery method mInterval v2.0
+ * Copyright 2015-2016 maam.inc
  * Contributing Author: Hiroki Homma
  * Require for jQuery v1.7 or above
  */
@@ -16,6 +16,8 @@ $.fn.mInterval = function(options){
         velocity_js: true,
         css_animation: true,
 
+        first_set_only: false,
+
         before_switch: function(now) {},
         after_switch: function(now) {}
       },
@@ -27,23 +29,27 @@ $.fn.mInterval = function(options){
       params.interval_time = params.duration + 16;
     }
 
-    //selection of animation_method
-    if(params.velocity_js === true && typeof $.fn.velocity !== 'undefined') {
-      animation_method = 'velocity';
+    selectAnimationMethod();
 
-    } else if(params.css_animation === true) {
-      (function() {
-        var div = document.createElement('div'),
-          prop = ['transition', 'MozTransition', 'WebkitTransition', 'OTransition', 'msTransition'],
-          i;
+    function selectAnimationMethod() {
+      //selection of animation_method
+      if(params.velocity_js === true && typeof $.fn.velocity !== 'undefined') {
+        animation_method = 'velocity';
 
-        for (i = 0; i < prop.length; i++) {
-          if (prop[i] in div.style) {
-            animation_method = 'css_transition';
-            break;
+      } else if(params.css_animation === true) {
+        (function() {
+          var div = document.createElement('div'),
+            prop = ['transition', 'MozTransition', 'WebkitTransition', 'OTransition', 'msTransition'],
+            i;
+
+          for (i = 0; i < prop.length; i++) {
+            if (prop[i] in div.style) {
+              animation_method = 'css_transition';
+              break;
+            }
           }
-        }
-      }());
+        }());
+      }
     }
 
   $self.each(function(){
@@ -52,6 +58,31 @@ $.fn.mInterval = function(options){
         len = $li.length,
         now = 0,
         prev = -1;
+
+    if(options === 'stop') {
+      if(!$self[0]['mInterval']) {
+        return;
+      }
+
+      clearInterval($self[0]['mInterval']['id']);
+      return;
+    }
+
+    if(options === 'start') {
+      if(!$self[0]['mInterval']) {
+        return;
+      }
+
+      params = $self[0]['mInterval']['params'];
+
+      now = $li.index($li.filter('.now'));
+
+      selectAnimationMethod();
+
+      $self[0]['mInterval']['id'] = setInterval(interval, params.interval_time);
+
+      return;
+    }
 
     if(params.random_init) {
       now = Math.floor(Math.random() * len);
@@ -78,6 +109,8 @@ $.fn.mInterval = function(options){
     }
 
     function afterFadeIn() {
+      $li.removeClass('now').eq(now).addClass('now');
+
       if(prev >= 0) {
         $li.eq(prev).css({
           opacity: 0,
@@ -156,10 +189,7 @@ $.fn.mInterval = function(options){
       }
     }
 
-    setInitCSS();
-    fadeIn();
-
-    setInterval(function() {
+    function interval() {
       prev = now;
 
       now++;
@@ -168,7 +198,18 @@ $.fn.mInterval = function(options){
       }
 
       fadeIn();
+    }
 
-    }, params.interval_time);
+    setInitCSS();
+    fadeIn();
+
+    $self[0]['mInterval'] = {
+      'id': null,
+      params: params
+    };
+
+    if(!params.first_set_only) {
+      $self[0]['mInterval']['id'] = setInterval(interval, params.interval_time);
+    }
   });
 };

@@ -84,10 +84,23 @@
       velocity_js: false,
       css_animation: true,
       random_init: true,
+      first_set_only: true,
       before_switch: function(now) {
         $('.mInterval > li').eq(now).html(now);
       }
     });
+
+    setTimeout(function() {
+      $('.mInterval').mInterval('start');
+
+      setTimeout(function() {
+        $('.mInterval').mInterval('stop');
+
+        setTimeout(function() {
+          $('.mInterval').mInterval('start');
+        }, 3000);
+      }, 3000);
+    }, 1000);
 	});
 </script>
 
