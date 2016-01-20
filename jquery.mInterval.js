@@ -1,5 +1,5 @@
 /*!
- * jQuery method mInterval v2.0
+ * jQuery method mInterval v2.1
  * Copyright 2015-2016 maam.inc
  * Contributing Author: Hiroki Homma
  * Require for jQuery v1.7 or above
@@ -17,6 +17,7 @@ $.fn.mInterval = function(options){
         css_animation: true,
 
         first_set_only: false,
+        clickable: false,
 
         before_switch: function(now) {},
         after_switch: function(now) {}
@@ -64,7 +65,7 @@ $.fn.mInterval = function(options){
         return;
       }
 
-      clearInterval($self[0]['mInterval']['id']);
+      stop();
       return;
     }
 
@@ -73,19 +74,24 @@ $.fn.mInterval = function(options){
         return;
       }
 
-      params = $self[0]['mInterval']['params'];
-
-      now = $li.index($li.filter('.now'));
-
-      selectAnimationMethod();
-
-      $self[0]['mInterval']['id'] = setInterval(interval, params.interval_time);
-
+      start();
       return;
     }
 
     if(params.random_init) {
       now = Math.floor(Math.random() * len);
+    }
+
+    function stop() {
+      clearInterval($self[0]['mInterval']['id']);
+    }
+
+    function start() {
+      params = $self[0]['mInterval']['params'];
+
+      selectAnimationMethod();
+
+      $self[0]['mInterval']['id'] = setInterval(interval, params.interval_time);
     }
 
     function setInitCSS() {
@@ -109,8 +115,6 @@ $.fn.mInterval = function(options){
     }
 
     function afterFadeIn() {
-      $li.removeClass('now').eq(now).addClass('now');
-
       if(prev >= 0) {
         $li.eq(prev).css({
           opacity: 0,
@@ -121,6 +125,8 @@ $.fn.mInterval = function(options){
       $li.eq(now).css({
         zIndex: 0
       });
+
+      $self.removeClass('mInterval_animate');
 
       if (typeof params.after_switch === 'function') {
         params.after_switch(now);
@@ -172,6 +178,9 @@ $.fn.mInterval = function(options){
         params.before_switch(now);
       }
 
+      $li.removeClass('mInterval_now').eq(now).addClass('mInterval_now');
+      $self.addClass('mInterval_animate');
+
       setBeforeCSS();
       switch(animation_method) {
         case 'velocity':
@@ -190,7 +199,7 @@ $.fn.mInterval = function(options){
     }
 
     function interval() {
-      prev = now;
+      prev = now = $li.index($li.filter('.mInterval_now'));
 
       now++;
       if(now >= len) {
@@ -207,6 +216,18 @@ $.fn.mInterval = function(options){
       'id': null,
       params: params
     };
+
+    if(params.clickable) {
+      $self.on('click.mInterval', function(e) {
+        e.preventDefault();
+
+        if(!$self.hasClass('mInterval_animate')) {
+          stop();
+          interval();
+          start();
+        }
+      });
+    }
 
     if(!params.first_set_only) {
       $self[0]['mInterval']['id'] = setInterval(interval, params.interval_time);
